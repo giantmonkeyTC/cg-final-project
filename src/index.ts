@@ -25,6 +25,7 @@ scene.add(ambient);
  */
 var width = window.innerWidth; //窗口宽度
 var height = window.innerHeight; //窗口高度
+var sky = 30;//天花板的高度
 //创建相机对象
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 /**
@@ -40,12 +41,13 @@ var group = new THREE.Group();
 
 // 加载雨滴理贴图
 const texloader = new THREE.TextureLoader();
+
 texloader.load(
-    '../raindrop.png',
+    '/raindrop.png',
     function(textureTree){
         console.log("raindrop loaded");
         // 批量创建表示雨滴的精灵模型
-        for (let i = 0; i < 400; i++) {
+        for (let i = 0; i < 300; i++) {
             var spriteMaterial = new THREE.SpriteMaterial({
             map:textureTree,//设置精灵纹理贴图
             });
@@ -53,12 +55,12 @@ texloader.load(
             var sprite = new THREE.Sprite(spriteMaterial);
             scene.add(sprite);
             // 控制精灵大小,
-            sprite.scale.set(8, 10, 1);  //只需要设置x、y两个分量就可以
+            sprite.scale.set(.3, .6, 1);  //只需要设置x、y两个分量就可以
             var k1 = Math.random() - 0.5;
             var k2 = Math.random() - 0.5;
-            var k3 = Math.random() - 0.5;
+            var k3 = Math.random() ;
             // 设置精灵模型位置，在整个空间上上随机分布
-            sprite.position.set(1000 * k1, 300*k3, 1000 * k2);
+            sprite.position.set(100 * k1, sky*k3, 100 * k2);
             group.add(sprite);
         }
         scene.add(group);//雨滴群组插入场景中
@@ -68,8 +70,6 @@ texloader.load(
 );
 
 
-
-
 //椅子
 const loader = new GLTFLoader();
 loader.load('/sceneconverttest.gltf', function (gltf) {
@@ -77,13 +77,14 @@ loader.load('/sceneconverttest.gltf', function (gltf) {
 }, undefined, function (error) {
     console.error(error);
 })
+
 camera.position.z = -40;
-camera.position.x = 30;
+camera.position.x = -30;
 camera.position.y = 20;
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);//设置渲染区域尺寸
-renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
+renderer.setClearColor(0x627494, 1); //设置背景颜色  原来 0xb9d3f
 document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
 //执行渲染操作   指定场景、相机作为参数
 // 渲染函数
@@ -92,10 +93,10 @@ function render() {
     // 每次渲染都会更新雨滴的位置，进而产生动画效果
     group.children.forEach(sprite => {
       // 雨滴的y坐标每次减1
-      sprite.position.y -= 1;
+      sprite.position.y -= .8;
       if (sprite.position.y < 0) {
         // 如果雨滴落到地面，重置y，从新下落
-        sprite.position.y = 500;
+        sprite.position.y += sky;
       }
     });
     renderer.render(scene, camera); //执行渲染操作

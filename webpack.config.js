@@ -31,4 +31,14 @@ module.exports = {
         new HtmlWebPackPlugin({ title: "threejs" }),
         new webpack.ProvidePlugin({ 'THREE': 'three/build/three' })
     ]
+    // test: /\.jpg|png|gif|bmp|jpeg$/,
+    // use: [
+    //     {
+    //         loader: 'file-loader',
+    //         options: {
+    //             name:"[name].[ext]",
+    //             esModule: false
+    //         }
+    //     }
+    // ]
 }
