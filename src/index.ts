@@ -56,9 +56,9 @@ var starsGeometry = new THREE.BufferGeometry();
 
 // }
 
-var array = Int16Array.from({ length: 3000 }, (x) => THREE.MathUtils.randFloatSpread(2000));
+var array = Int16Array.from({ length: 1200 }, (x) =>  THREE.MathUtils.randFloatSpread(100));
 starsGeometry.setAttribute('position', new THREE.BufferAttribute(array, 3));
-var starsMaterial = new THREE.PointsMaterial({ color: 0x888888 });
+var starsMaterial = new THREE.PointsMaterial({ color: 0xffffff });
 
 var starField = new THREE.Points(starsGeometry, starsMaterial);
 
