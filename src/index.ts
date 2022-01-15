@@ -42,13 +42,60 @@ camera.position.z = 2;
 camera.position.x = 5;
 camera.position.y = 5;
 
+var starsGeometry = new THREE.BufferGeometry();
+
+// for (var i = 0; i < 10000; i++) {
+
+//     var star = new THREE.Vector3();
+//     star.x = THREE.MathUtils.randFloatSpread(2000);
+//     star.y = THREE.MathUtils.randFloatSpread(2000);
+//     star.z = THREE.MathUtils.randFloatSpread(2000);
+
+//     var array = Array.from({ length: 3000 }, (x) => THREE.MathUtils.randFloatSpread(2000));
+//     starsGeometry.setAttribute('position', new THREE.BufferAttribute(array, 3));
+
+// }
+
+var array = Int16Array.from({ length: 3000 }, (x) => THREE.MathUtils.randFloatSpread(2000));
+starsGeometry.setAttribute('position', new THREE.BufferAttribute(array, 3));
+var starsMaterial = new THREE.PointsMaterial({ color: 0x888888 });
+
+var starField = new THREE.Points(starsGeometry, starsMaterial);
+
+scene.add(starField);
+// var group = new THREE.Group();
+// for (let i = 0; i < 20; i++) {
+//     // 创建精灵模型对象
+//     var sprite = new THREE.Sprite();
+//     scene.add(sprite);
+//     // 控制精灵大小,
+//     sprite.scale.set(8, 10, 1); //// 只需要设置x、y两个分量就可以
+//     var k1 = Math.random() - 0.5;
+//     var k2 = Math.random() - 0.5;
+//     var k3 = Math.random() - 0.5;
+//     // 设置精灵模型位置，在整个空间上上随机分布
+//     sprite.position.set(200 * k1, 200 * k3, 200 * k2)
+//     group.add(sprite);
+// }
+
+// scene.add(group);//雨滴群组插入场景中
+
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);//设置渲染区域尺寸
 renderer.setClearColor(0xb9d3ff, 1); //设置背景颜色
 document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
 //执行渲染操作   指定场景、相机作为参数
 function render() {
-    renderer.render(scene, camera);//执行渲染操作
+    // group.children.forEach(sprite => {
+    //     // 雨滴的y坐标每次减1
+    //     sprite.position.y -= 1;
+    //     if (sprite.position.y < 0) {
+    //         // 如果雨滴落到地面，重置y，从新下落
+    //         sprite.position.y = 200;
+    //     }
+    // });
+    renderer.render(scene, camera); //执行渲染操作
+    requestAnimationFrame(render);
 }
 render();
 var controls = new CONTROL.OrbitControls(camera, renderer.domElement);//创建控件对象
