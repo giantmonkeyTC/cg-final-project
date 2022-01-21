@@ -41,11 +41,8 @@ camera.position.x = 0;
 camera.position.y = 10;
 camera.rotation.y = 3.14;
 
-
-let particles: Points;
-
 const particleNum = 1000;
-const maxRange = 200;
+const maxRange = 100;
 const minRange = maxRange / 2;
 const textureSize = 64.0;
 
@@ -88,13 +85,14 @@ const getTexture = () => {
 }
 
 // 创建一个组表示所有的雨滴
-var group = new THREE.Group();
+var snowGroup = new THREE.Group();
+var pileGroup = new THREE.Group();
 
 // 加载雨滴理贴图
 const texloader = new THREE.TextureLoader();
 
 
-for (let i = 0; i < 1000; i++) {
+for (let i = 0; i < particleNum; i++) {
     var spriteMaterial = new THREE.SpriteMaterial({
         map: getTexture(),//设置精灵纹理贴图
     });
@@ -110,9 +108,9 @@ for (let i = 0; i < 1000; i++) {
     sprite.position.set( Math.floor(Math.random() * maxRange - minRange), 
      Math.floor(Math.random() * maxRange - minRange),
      Math.floor(Math.random() * maxRange - minRange));
-    group.add(sprite);
+    snowGroup.add(sprite);
 }
-scene.add(group);//雨滴群组插入场景中
+scene.add(snowGroup);//雨滴群组插入场景中
 
 
 
@@ -142,17 +140,17 @@ const pointMaterial = new THREE.PointsMaterial({
     depthWrite: false
 });
 
-// const velocities = [];
-// for (let i = 0; i < particleNum; i++) {
-//     const x = Math.floor(Math.random() * 6 - 3) * 0.1;
-//     const y = Math.floor(Math.random() * 10 + 3) * - 0.05;
-//     const z = Math.floor(Math.random() * 6 - 3) * 0.1;
-//     const particle = new THREE.Vector3(x, y, z);
-//     velocities.push(particle);
-// }
+const velocities = [];
+for (let i = 0; i < particleNum; i++) {
+    const x = Math.floor(Math.random() * 6 - 3) * 0.1;
+    const y = Math.floor(Math.random() * 10 + 3) * - 0.05;
+    const z = Math.floor(Math.random() * 6 - 3) * 0.1;
+    const particle = new THREE.Vector3(x, y, z);
+    velocities.push(particle);
+}
+console.log(velocities[2].y);
 
 
-let pile = [];
 
 
 
@@ -164,12 +162,24 @@ document.body.appendChild(renderer.domElement); //body元素中插入canvas对�
 function render() {
     const time = Date.now() * 0.001;
 
-    group.children.forEach(sprite => {
-        // 雨滴的y坐标每次减1
-        sprite.position.y -= .8;
-        if (sprite.position.y < 0) {
-          // 如果雨滴落到地面，重置y，从新下落
+    snowGroup.children.forEach((sprite,i) => {
+        sprite.position.y += velocities[i].y;
+        sprite.position.x += velocities[i].x;
+        sprite.position.z += velocities[i].z;
+        if (sprite.position.y < -5) {
           sprite.position.y += maxRange;
+        }
+        if(sprite.position.x > maxRange ){
+            sprite.position.x -= maxRange;
+        }
+        else if(sprite.position.x <-maxRange){
+            sprite.position.x += maxRange
+        }
+        if(sprite.position.z > maxRange){
+            sprite.position.z -= maxRange;
+        }
+        else if(sprite.position.z < -maxRange){
+            sprite.position.z += maxRange;
         }
       });
     renderer.render(scene, camera); //执行渲染操作
