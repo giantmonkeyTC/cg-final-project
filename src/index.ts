@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import { BufferAttribute, Color, Points } from "three"
+import { BufferAttribute, Color, EventDispatcher, Points } from "three"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
 import { time, timeStamp } from "console";
@@ -31,17 +31,25 @@ var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHei
  * 创建渲染器对象
  */
 const loader = new GLTFLoader();
-loader.load('/sceneconverttest.gltf', function (gltf) {
+loader.load('/scene.gltf', function (gltf) {
+    gltf.scene.scale.set(0.05, 0.05, 0.05);
     scene.add(gltf.scene);
 }, undefined, function (error) {
     console.error(error);
 })
+scene.background = new THREE.Color(0x000000);
 camera.position.z = -30;
 camera.position.x = 0;
 camera.position.y = 10;
 camera.rotation.y = 3.14;
 
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshPhongMaterial({ color: 0x000000, depthWrite: false }));
+ground.rotation.x = - Math.PI / 2;
+ground.position.y = 0;
+scene.add(ground);
+
 const particleNum = 1000;
+const pileNumber = 10000;
 const maxRange = 100;
 const minRange = maxRange / 2;
 const textureSize = 64.0;
@@ -62,83 +70,64 @@ const drawRadialGradation = (ctx, canvasRadius, canvasW, canvasH) => {
 const getTexture = () => {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
-
     const diameter = textureSize;
     canvas.width = diameter;
     canvas.height = diameter;
     const canvasRadius = diameter / 2;
-
-    /* gradation circle
-    ------------------------ */
     drawRadialGradation(ctx, canvasRadius, canvas.width, canvas.height);
-
-
-    /* snow crystal
-    ------------------------ */
-    // drawSnowCrystal(ctx, canvasRadius);
-
     const texture = new THREE.Texture(canvas);
-    //texture.minFilter = THREE.NearestFilter;
     texture.type = THREE.FloatType;
     texture.needsUpdate = true;
     return texture;
 }
 
-// 创建一个组表示所有的雨滴
 var snowGroup = new THREE.Group();
 var pileGroup = new THREE.Group();
 
-// 加载雨滴理贴图
-const texloader = new THREE.TextureLoader();
-
-
 for (let i = 0; i < particleNum; i++) {
     var spriteMaterial = new THREE.SpriteMaterial({
-        map: getTexture(),//设置精灵纹理贴图
+        map: getTexture(),
+        fog: true,
+        transparent: true,
     });
-    // 创建精灵模型对象
     var sprite = new THREE.Sprite(spriteMaterial);
     scene.add(sprite);
-    // 控制精灵大小,
-    sprite.scale.set(.8, .8, 5);  //只需要设置x、y两个分量就可以
-    var k1 = Math.random() - 0.5;
-    var k2 = Math.random() - 0.5;
-    var k3 = Math.random();
-    // 设置精灵模型位置，在整个空间上上随机分布
-    sprite.position.set( Math.floor(Math.random() * maxRange - minRange), 
-     Math.floor(Math.random() * maxRange - minRange),
-     Math.floor(Math.random() * maxRange - minRange));
+    sprite.scale.set(.8, .8, 5);
+    sprite.position.set(Math.floor(Math.random() * maxRange - minRange),
+        Math.floor(Math.random() * maxRange - minRange),
+        Math.floor(Math.random() * maxRange - minRange));
     snowGroup.add(sprite);
 }
-scene.add(snowGroup);//雨滴群组插入场景中
 
-
-
-
-let geometry = new THREE.BufferGeometry()
-let positions = [];
-let colors = [];
-for (let i = 0; i < particleNum; i++) {
-    const x = Math.floor(Math.random() * maxRange - minRange);
-    const y = Math.floor(Math.random() * maxRange - minRange);
-    const z = Math.floor(Math.random() * maxRange - minRange);
-    positions.push(x, y, z);
-    colors.push(255., 255., 255.);
+for (let i = 0; i < pileNumber; i++) {
+    var spriteMaterial = new THREE.SpriteMaterial({
+        map: getTexture(),
+    })
+    var sprite = new THREE.Sprite(spriteMaterial);
+    sprite.position.set(Math.floor(Math.random() * maxRange - minRange),
+        0,
+        Math.floor(Math.random() * maxRange - minRange));
+    scene.add(sprite);
+    sprite.visible = false;
+    pileGroup.add(sprite);
 }
-geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-// geometry.computeBoundingSphere();
 
-const pointMaterial = new THREE.PointsMaterial({
-    size: 8,
-    color: 0xffffff,
-    vertexColors: false,
-    map: getTexture(),
-    // blending: THREE.AdditiveBlending,
-    transparent: true,
-    // opacity: 0.8,
-    fog: true,
-    depthWrite: false
-});
+
+scene.add(snowGroup);
+scene.add(pileGroup);
+
+
+// let geometry = new THREE.BufferGeometry()
+// let positions = [];
+// let colors = [];
+// for (let i = 0; i < particleNum; i++) {
+//     const x = Math.floor(Math.random() * maxRange - minRange);
+//     const y = Math.floor(Math.random() * maxRange - minRange);
+//     const z = Math.floor(Math.random() * maxRange - minRange);
+//     positions.push(x, y, z);
+//     colors.push(255., 255., 255.);
+// }
+// geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
 const velocities = [];
 for (let i = 0; i < particleNum; i++) {
@@ -148,40 +137,52 @@ for (let i = 0; i < particleNum; i++) {
     const particle = new THREE.Vector3(x, y, z);
     velocities.push(particle);
 }
-console.log(velocities[2].y);
 
 
-
-
-
+class PileEvent extends EventDispatcher {
+    pile(pileX, pileZ) {
+        this.dispatchEvent({ type: 'pile', x: pileX, z: pileZ });
+    }
+};
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);//设置渲染区域尺寸
-renderer.setClearColor(0x627494, 1); //设置背景颜色  原来 0xb9d3f
 document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
+const pileEvent = new PileEvent();
+var index = 0;
+pileEvent.addEventListener('pile',function(event){
+    pileGroup.children.at(index).visible = true;
+    pileGroup.children.at(index).position.set(event.x,1.,event.z);
+    index++;
+    if(index>=pileNumber)
+        index=0;
+    if(index>=pileNumber/2)
+        pileGroup.children.at(index + 1 - Math.floor(pileNumber/2)).visible = false;
+});
 
 function render() {
     const time = Date.now() * 0.001;
 
-    snowGroup.children.forEach((sprite,i) => {
+    snowGroup.children.forEach((sprite, i) => {
         sprite.position.y += velocities[i].y;
         sprite.position.x += velocities[i].x;
         sprite.position.z += velocities[i].z;
         if (sprite.position.y < -5) {
-          sprite.position.y += maxRange;
+            sprite.position.y += maxRange;
+             pileEvent.pile(sprite.position.x,sprite.position.z);
         }
-        if(sprite.position.x > maxRange ){
-            sprite.position.x -= maxRange;
+        if (sprite.position.x > maxRange) {
+            sprite.position.x -= (maxRange + Math.random()*10);
         }
-        else if(sprite.position.x <-maxRange){
-            sprite.position.x += maxRange
+        else if (sprite.position.x < -maxRange) {
+            sprite.position.x += (maxRange + Math.random()*10);
         }
-        if(sprite.position.z > maxRange){
-            sprite.position.z -= maxRange;
+        if (sprite.position.z > maxRange) {
+            sprite.position.z -=(maxRange + Math.random()*10);
         }
-        else if(sprite.position.z < -maxRange){
-            sprite.position.z += maxRange;
+        else if (sprite.position.z < -maxRange) {
+            sprite.position.z += (maxRange + Math.random()*10);
         }
-      });
+    });
     renderer.render(scene, camera); //执行渲染操作
     requestAnimationFrame(render);//请求再次执行渲染函数render，渲染下一帧
 
