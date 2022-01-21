@@ -13,6 +13,7 @@ var scene = new THREE.Scene();
  */
 var point = new THREE.PointLight(0xffffff);
 var sky = 30;
+var groundSize = 30
 point.position.set(60, 0, 10); //点光源位置
 point.power = 10.
 point.intensity = 10.
@@ -52,15 +53,95 @@ scene.add(ground);
 const maxRange = 100;
 const minRange = maxRange / 2;
 
+//spring init
+var springFlag = true;
+const vertexShader = `
+  varying vec2 vUv;
+  uniform float time;
+  
+	void main() {
+    vUv = uv;
+    
+    // VERTEX POSITION
+    
+    vec4 mvPosition = vec4( position, 1.0 );
+    #ifdef USE_INSTANCING
+    	mvPosition = instanceMatrix * mvPosition;
+    #endif
+    
+    // DISPLACEMENT
+    
+    // here the displacement is made stronger on the blades tips.
+    float dispPower = 1.0 - cos( uv.y * 3.1416 / 2.0 );
+    
+    float displacement = sin( mvPosition.z + time * 10.0 ) * ( 0.1 * dispPower );
+    mvPosition.z += displacement;
+    
+    //
+    
+    vec4 modelViewPosition = modelViewMatrix * mvPosition;
+    gl_Position = projectionMatrix * modelViewPosition;
+	}
+`;
+
+const fragmentShader = `
+  varying vec2 vUv;
+  
+  void main() {
+  	vec3 baseColor = vec3( 0.41, 1.0, 0.5 );
+    float clarity = ( vUv.y * 0.5 ) + 0.5;
+    gl_FragColor = vec4( baseColor * clarity, 1 );
+  }
+`;
+
+const uniforms = {
+    time: {
+        value: 0
+    }
+}
+
+const leavesMaterial = new THREE.ShaderMaterial({
+    vertexShader,
+    fragmentShader,
+    uniforms,
+    side: THREE.DoubleSide
+});
+
+/////////
+// 草地MESH
+/////////
+
+const instanceNumber = 250 * groundSize;
+const dummy = new THREE.Object3D();
+
+const geometry = new THREE.PlaneGeometry(0.1, 1, 1, 4);
+geometry.translate(0, 0.5, 0); // move grass blade geometry lowest point at 0.
+
+const instancedMesh = new THREE.InstancedMesh(geometry, leavesMaterial, instanceNumber);
+
+const clock = new THREE.Clock();
+
+//summer init
+var rainGroupSummer = new THREE.Group();
+var rainCount = 800;
+var summerFlag = false;
+var rainDropSpeed = 1.2;
+
+//falll init
+var fallFlag = false;
+
+
 //winter init
 var snowGroupWinter = new THREE.Group();
 var pileGroupWinter = new THREE.Group();
 const particleNumWinter = 1000;
 const pileNumberWinter = 10000;
 const velocitiesWinter = [];
-var winterFlag = true;
+var winterFlag = false;
 
 winterInit();
+summerInit();
+springInit();
 
 // let geometry = new THREE.BufferGeometry()
 // let positions = [];
@@ -162,13 +243,82 @@ function winterShow() {
     winterFlag = true;
     snowGroupWinter.visible = true;
     pileGroupWinter.visible = true;
-    pileGroupWinter.children.forEach(it=>{it.visible = false;})
+    pileGroupWinter.children.forEach(it => { it.visible = false; })
 
 }
+
+function summerInit() {
+    // 创建一个组表示所有的雨滴
+
+    const texloader = new THREE.TextureLoader();// 加载雨滴理贴图
+    texloader.load(
+        '/raindrop.png',
+        function (textureTree) {
+            console.log("raindrop loaded");
+            // 批量创建表示雨滴的精灵模型
+            for (let i = 0; i < rainCount; i++) {
+                var spriteMaterial = new THREE.SpriteMaterial({
+                    map: textureTree,//设置精灵纹理贴图
+                });
+                // 创建精灵模型对象
+                var sprite = new THREE.Sprite(spriteMaterial);
+                scene.add(sprite);
+                // 控制精灵大小,
+                sprite.scale.set(.3, .6, 1);  //只需要设置x、y两个分量就可以
+                //set position
+                // var k1 = Math.random() - 0.5;
+                // var k2 = Math.random() - 0.5;
+                // var k3 = Math.random() ;
+                // 设置精灵模型位置，在整个空间上上随机分布
+                // sprite.position.set(100 * k1, sky*k3, 100 * k2);
+                sprite.position.set(Math.floor(Math.random() * maxRange - minRange),
+                    Math.floor(Math.random() * maxRange - minRange),
+                    Math.floor(Math.random() * maxRange - minRange));
+                rainGroupSummer.add(sprite);
+            }
+            scene.add(rainGroupSummer);//雨滴群组插入场景中
+
+        },
+        function (error) { console.error("rain texture failed to load:", error) }
+    );
+}
+function summerShow() {
+    summerFlag = true;
+    rainGroupSummer.visible = true;
+}
+function springInit() {
+    scene.add(instancedMesh);
+
+    for (let i = 0; i < instanceNumber; i++) {
+
+        dummy.position.set(
+            (Math.random() - 0.5) * groundSize,
+            0,
+            (Math.random() - 0.5) * groundSize
+        );
+
+        dummy.scale.setScalar(0.5 + Math.random() * 0.5);
+
+        dummy.rotation.y = Math.random() * Math.PI;
+
+        dummy.updateMatrix();
+        instancedMesh.setMatrixAt(i, dummy.matrix);
+
+    }
+}
+function springShow() {
+    springFlag = true;
+    instancedMesh.visible = true;
+}
 function seasonDisable() {
+    springFlag = false;
+    summerFlag = false;
+    fallFlag = false;
     winterFlag = false;
     snowGroupWinter.visible = false;
     pileGroupWinter.visible = false;
+    rainGroupSummer.visible = false;
+    instancedMesh.visible = false;
 }
 
 
@@ -177,7 +327,19 @@ class PileEvent extends EventDispatcher {
         this.dispatchEvent({ type: 'pile', x: pileX, z: pileZ });
     }
 };
-var renderer = new THREE.WebGLRenderer();
+
+
+// disabling AA (antialiasing) to increase performance on macs with retina displays
+// https://attackingpixels.com/tips-tricks-optimizing-three-js-performance/
+let pixelRatio = window.devicePixelRatio
+let AA = true
+if (pixelRatio > 1) {
+    AA = false
+}
+var renderer = new THREE.WebGLRenderer({
+    antialias: AA,
+    powerPreference: "high-performance",
+});
 renderer.setSize(width, height);//设置渲染区域尺寸
 document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
 const pileListener = new PileEvent();
@@ -192,28 +354,50 @@ pileListener.addEventListener('pile', function (event) {
     if (index >= pileNumberWinter / 2)
         pileGroupWinter.children.at(index + 1 - Math.floor(pileNumberWinter / 2)).visible = false;
 });
-seasonListener.addEventListener('season_update',function(event) {
+seasonListener.addEventListener('season_update', function (event) {
     seasonDisable();
-    if(event.seasonType== SeasonType.Winter)
-        winterShow();
-    else  if(event.seasonType== SeasonType.Fall)
+    if (event.seasonType == SeasonType.Spring)
+        springShow();
+    else if (event.seasonType == SeasonType.Summer)
+        summerShow();
+    else if (event.seasonType == SeasonType.Fall)
         fallShow();
-});
-seasonListener.addEventListener('season_next',function(event){
-    if(winterFlag)    
-        seasonDisable();
-    else
+    else if (event.seasonType == SeasonType.Winter)
         winterShow();
-  
+});
+seasonListener.addEventListener('season_next', function (event) {
+    if (springFlag)
+        seasonListener.inform(SeasonType.Summer);
+    else if (summerFlag)
+        seasonListener.inform(SeasonType.Fall);
+    else if (fallFlag)
+        seasonListener.inform(SeasonType.Winter);
+    else if (winterFlag)
+        seasonListener.inform(SeasonType.Spring);
+
 });
 var start = 0;
 function render() {
     const time = Date.now() * 0.001;
-    if(time-start >= 5){
+    if (time - start >= 5) {
         start = time;
         seasonListener.next();
     }
-        
+    if (summerFlag) {
+        rainGroupSummer.children.forEach(sprite => {
+            // 雨滴的y坐标每次减1
+            sprite.position.y -= rainDropSpeed;
+            if (sprite.position.y < 0) {
+                // 如果雨滴落到地面，重置y，重新下落
+                sprite.position.y += sky;
+            }
+        });
+    }
+
+    if (springFlag) {
+        leavesMaterial.uniforms.time.value = clock.getElapsedTime();
+        leavesMaterial.uniformsNeedUpdate = true;
+    }
 
     if (winterFlag)
         snowGroupWinter.children.forEach((sprite, i) => {
@@ -245,7 +429,9 @@ requestAnimationFrame(render);
 
 
 function fallShow() {
-    throw new Error("Function not implemented.");
+    fallFlag = true;
+    console.log('fall');
 }
+
 // var controls = new CONTROL.OrbitControls(camera, renderer.domElement);//创建控件对象
 // controls.addEventListener('change', render);//监听鼠标、键盘事件
