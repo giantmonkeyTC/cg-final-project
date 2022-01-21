@@ -8,16 +8,20 @@ import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
      * 创建场景对象Scene
      */
 var scene = new THREE.Scene();
+
+var sky = 30;//天花板的高度
+var groundSize=30;//地面宽度约66
 /**
  * 光源设置
  */
-//点光源
-var point = new THREE.PointLight(0xffffff);
-point.position.set(400, 200, 300); //点光源位置
-scene.add(point); //点光源添加到场景中
-//环境光
-var ambient = new THREE.AmbientLight(0xffffff);
-scene.add(ambient);
+ var point = new THREE.PointLight(0xffffff);
+ point.position.set(60, 0, 10); //点光源位置
+ point.power = 10.
+ point.intensity = 10.
+ scene.add(point); //点光源添加到场景中
+ var ambient = new THREE.AmbientLight(0xffffff);
+ ambient.intensity = 10.
+ scene.add(ambient);
 // console.log(scene)
 // console.log(scene.children)
 /**
@@ -25,8 +29,7 @@ scene.add(ambient);
  */
 var width = window.innerWidth; //窗口宽度
 var height = window.innerHeight; //窗口高度
-var sky = 30;//天花板的高度
-var groundSize=30;//66
+
 //创建相机对象
 var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 /**
@@ -74,14 +77,26 @@ var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHei
 //椅子
 const loader = new GLTFLoader();
 loader.load('/sceneconverttest.gltf', function (gltf) {
+    // gltf.scene.scale.set(0.05,0.05,0.05);
     scene.add(gltf.scene);
 }, undefined, function (error) {
     console.error(error);
 })
 
-camera.position.z = -40;
-camera.position.x = -30;
-camera.position.y = 20;
+// camera.position.z = -40;
+// camera.position.x = -30;
+// camera.position.y = 20;
+
+scene.background = new THREE.Color(0x000000);
+camera.position.z = -30;
+camera.position.x = 0;
+camera.position.y = 10;
+camera.rotation.y = 3.14;
+
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshPhongMaterial({ color: 0x000000, depthWrite: false }));
+ground.rotation.x = - Math.PI / 2;
+ground.position.y = 0;
+scene.add(ground);
 
 // disabling AA (antialiasing) to increase performance on macs with retina displays
 // https://attackingpixels.com/tips-tricks-optimizing-three-js-performance/
@@ -218,5 +233,5 @@ function render() {
   }
   
 render();
-var controls = new CONTROL.OrbitControls(camera, renderer.domElement);//创建控件对象
-controls.addEventListener('change', render);//监听鼠标、键盘事件
+// var controls = new CONTROL.OrbitControls(camera, renderer.domElement);//创建控件对象
+// controls.addEventListener('change', render);//监听鼠标、键盘事件
