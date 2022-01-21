@@ -48,74 +48,19 @@ ground.rotation.x = - Math.PI / 2;
 ground.position.y = 0;
 scene.add(ground);
 
-const particleNum = 1000;
-const pileNumber = 10000;
+
 const maxRange = 100;
 const minRange = maxRange / 2;
-const textureSize = 64.0;
 
+//winter init
+var snowGroupWinter = new THREE.Group();
+var pileGroupWinter = new THREE.Group();
+const particleNumWinter = 1000;
+const pileNumberWinter = 10000;
+const velocitiesWinter = [];
+var winterFlag = true;
 
-
-const drawRadialGradation = (ctx, canvasRadius, canvasW, canvasH) => {
-    ctx.save();
-    const gradient = ctx.createRadialGradient(canvasRadius, canvasRadius, 0, canvasRadius, canvasRadius, canvasRadius);
-    gradient.addColorStop(0, 'rgba(255,255,255,1.0)');
-    gradient.addColorStop(0.5, 'rgba(255,255,255,0.5)');
-    gradient.addColorStop(1, 'rgba(255,255,255,0)');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, canvasW, canvasH);
-    ctx.restore();
-}
-
-const getTexture = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const diameter = textureSize;
-    canvas.width = diameter;
-    canvas.height = diameter;
-    const canvasRadius = diameter / 2;
-    drawRadialGradation(ctx, canvasRadius, canvas.width, canvas.height);
-    const texture = new THREE.Texture(canvas);
-    texture.type = THREE.FloatType;
-    texture.needsUpdate = true;
-    return texture;
-}
-
-var snowGroup = new THREE.Group();
-var pileGroup = new THREE.Group();
-
-for (let i = 0; i < particleNum; i++) {
-    var spriteMaterial = new THREE.SpriteMaterial({
-        map: getTexture(),
-        fog: true,
-        transparent: true,
-    });
-    var sprite = new THREE.Sprite(spriteMaterial);
-    scene.add(sprite);
-    sprite.scale.set(.8, .8, 5);
-    sprite.position.set(Math.floor(Math.random() * maxRange - minRange),
-        Math.floor(Math.random() * maxRange - minRange),
-        Math.floor(Math.random() * maxRange - minRange));
-    snowGroup.add(sprite);
-}
-
-for (let i = 0; i < pileNumber; i++) {
-    var spriteMaterial = new THREE.SpriteMaterial({
-        map: getTexture(),
-    })
-    var sprite = new THREE.Sprite(spriteMaterial);
-    sprite.position.set(Math.floor(Math.random() * maxRange - minRange),
-        0,
-        Math.floor(Math.random() * maxRange - minRange));
-    scene.add(sprite);
-    sprite.visible = false;
-    pileGroup.add(sprite);
-}
-
-
-scene.add(snowGroup);
-scene.add(pileGroup);
-
+winterInit();
 
 // let geometry = new THREE.BufferGeometry()
 // let positions = [];
@@ -129,13 +74,101 @@ scene.add(pileGroup);
 // }
 // geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
 
-const velocities = [];
-for (let i = 0; i < particleNum; i++) {
-    const x = Math.floor(Math.random() * 6 - 3) * 0.1;
-    const y = Math.floor(Math.random() * 10 + 3) * - 0.05;
-    const z = Math.floor(Math.random() * 6 - 3) * 0.1;
-    const particle = new THREE.Vector3(x, y, z);
-    velocities.push(particle);
+enum SeasonType {
+    Spring,
+    Summer,
+    Fall,
+    Winter
+}
+class SeasonEvent extends EventDispatcher {
+    inform(season: SeasonType) {
+        this.dispatchEvent({ type: 'season_update', seasonType: season });
+    }
+    next() {
+        this.dispatchEvent({ type: 'season_next' });
+    }
+}
+
+function winterInit() {
+
+    const textureSize = 64.0;
+
+    const drawRadialGradation = (ctx, canvasRadius, canvasW, canvasH) => {
+        ctx.save();
+        const gradient = ctx.createRadialGradient(canvasRadius, canvasRadius, 0, canvasRadius, canvasRadius, canvasRadius);
+        gradient.addColorStop(0, 'rgba(255,255,255,1.0)');
+        gradient.addColorStop(0.5, 'rgba(255,255,255,0.5)');
+        gradient.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvasW, canvasH);
+        ctx.restore();
+    }
+
+    const getTexture = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const diameter = textureSize;
+        canvas.width = diameter;
+        canvas.height = diameter;
+        const canvasRadius = diameter / 2;
+        drawRadialGradation(ctx, canvasRadius, canvas.width, canvas.height);
+        const texture = new THREE.Texture(canvas);
+        texture.type = THREE.FloatType;
+        texture.needsUpdate = true;
+        return texture;
+    }
+
+
+    for (let i = 0; i < particleNumWinter; i++) {
+        var spriteMaterial = new THREE.SpriteMaterial({
+            map: getTexture(),
+            fog: true,
+            transparent: true,
+        });
+        var sprite = new THREE.Sprite(spriteMaterial);
+        scene.add(sprite);
+        sprite.scale.set(.8, .8, 5);
+        sprite.position.set(Math.floor(Math.random() * maxRange - minRange),
+            Math.floor(Math.random() * maxRange - minRange),
+            Math.floor(Math.random() * maxRange - minRange));
+        snowGroupWinter.add(sprite);
+    }
+
+    for (let i = 0; i < pileNumberWinter; i++) {
+        var spriteMaterial = new THREE.SpriteMaterial({
+            map: getTexture(),
+        })
+        var sprite = new THREE.Sprite(spriteMaterial);
+        sprite.position.set(Math.floor(Math.random() * maxRange - minRange),
+            0,
+            Math.floor(Math.random() * maxRange - minRange));
+        scene.add(sprite);
+        sprite.visible = false;
+        pileGroupWinter.add(sprite);
+    }
+
+    for (let i = 0; i < particleNumWinter; i++) {
+        const x = Math.floor(Math.random() * 6 - 3) * 0.1;
+        const y = Math.floor(Math.random() * 10 + 3) * - 0.05;
+        const z = Math.floor(Math.random() * 6 - 3) * 0.1;
+        const particle = new THREE.Vector3(x, y, z);
+        velocitiesWinter.push(particle);
+    }
+    scene.add(snowGroupWinter);
+    scene.add(pileGroupWinter);
+}
+
+function winterShow() {
+    winterFlag = true;
+    snowGroupWinter.visible = true;
+    pileGroupWinter.visible = true;
+    pileGroupWinter.children.forEach(it=>{it.visible = false;})
+
+}
+function seasonDisable() {
+    winterFlag = false;
+    snowGroupWinter.visible = false;
+    pileGroupWinter.visible = false;
 }
 
 
@@ -147,47 +180,72 @@ class PileEvent extends EventDispatcher {
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(width, height);//设置渲染区域尺寸
 document.body.appendChild(renderer.domElement); //body元素中插入canvas对象
-const pileEvent = new PileEvent();
+const pileListener = new PileEvent();
+const seasonListener = new SeasonEvent();
 var index = 0;
-pileEvent.addEventListener('pile',function(event){
-    pileGroup.children.at(index).visible = true;
-    pileGroup.children.at(index).position.set(event.x,1.,event.z);
+pileListener.addEventListener('pile', function (event) {
+    pileGroupWinter.children.at(index).visible = true;
+    pileGroupWinter.children.at(index).position.set(event.x, 1., event.z);
     index++;
-    if(index>=pileNumber)
-        index=0;
-    if(index>=pileNumber/2)
-        pileGroup.children.at(index + 1 - Math.floor(pileNumber/2)).visible = false;
+    if (index >= pileNumberWinter)
+        index = 0;
+    if (index >= pileNumberWinter / 2)
+        pileGroupWinter.children.at(index + 1 - Math.floor(pileNumberWinter / 2)).visible = false;
 });
-
+seasonListener.addEventListener('season_update',function(event) {
+    seasonDisable();
+    if(event.seasonType== SeasonType.Winter)
+        winterShow();
+    else  if(event.seasonType== SeasonType.Fall)
+        fallShow();
+});
+seasonListener.addEventListener('season_next',function(event){
+    if(winterFlag)    
+        seasonDisable();
+    else
+        winterShow();
+  
+});
+var start = 0;
 function render() {
     const time = Date.now() * 0.001;
+    if(time-start >= 5){
+        start = time;
+        seasonListener.next();
+    }
+        
 
-    snowGroup.children.forEach((sprite, i) => {
-        sprite.position.y += velocities[i].y;
-        sprite.position.x += velocities[i].x;
-        sprite.position.z += velocities[i].z;
-        if (sprite.position.y < -5) {
-            sprite.position.y += maxRange;
-             pileEvent.pile(sprite.position.x,sprite.position.z);
-        }
-        if (sprite.position.x > maxRange) {
-            sprite.position.x -= (maxRange + Math.random()*10);
-        }
-        else if (sprite.position.x < -maxRange) {
-            sprite.position.x += (maxRange + Math.random()*10);
-        }
-        if (sprite.position.z > maxRange) {
-            sprite.position.z -=(maxRange + Math.random()*10);
-        }
-        else if (sprite.position.z < -maxRange) {
-            sprite.position.z += (maxRange + Math.random()*10);
-        }
-    });
+    if (winterFlag)
+        snowGroupWinter.children.forEach((sprite, i) => {
+            sprite.position.y += velocitiesWinter[i].y;
+            sprite.position.x += velocitiesWinter[i].x;
+            sprite.position.z += velocitiesWinter[i].z;
+            if (sprite.position.y < -5) {
+                sprite.position.y += maxRange;
+                pileListener.pile(sprite.position.x, sprite.position.z);
+            }
+            if (sprite.position.x > maxRange) {
+                sprite.position.x -= (maxRange + Math.random() * 10);
+            }
+            else if (sprite.position.x < -maxRange) {
+                sprite.position.x += (maxRange + Math.random() * 10);
+            }
+            if (sprite.position.z > maxRange) {
+                sprite.position.z -= (maxRange + Math.random() * 10);
+            }
+            else if (sprite.position.z < -maxRange) {
+                sprite.position.z += (maxRange + Math.random() * 10);
+            }
+        });
     renderer.render(scene, camera); //执行渲染操作
     requestAnimationFrame(render);//请求再次执行渲染函数render，渲染下一帧
 
 }
 requestAnimationFrame(render);
 
+
+function fallShow() {
+    throw new Error("Function not implemented.");
+}
 // var controls = new CONTROL.OrbitControls(camera, renderer.domElement);//创建控件对象
 // controls.addEventListener('change', render);//监听鼠标、键盘事件
