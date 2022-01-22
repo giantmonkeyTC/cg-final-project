@@ -483,8 +483,9 @@ var start = 0;
 var flipflag = true;
 var flipstart = 0;
 seasonListener.inform(SeasonType.Spring);
-function render() {
-    const time = Date.now() * 0.001;
+function render(timestamp) {
+    const time =timestamp * 0.001;
+    console.log(time);
     if (rotationSetting) {
         if (time - start >= 30) {
             start = time;
