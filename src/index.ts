@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Points } from "three"
+import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Object3D, Points } from "three"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
 import { time, timeStamp } from "console";
@@ -170,66 +170,25 @@ var Bird = function () {
     this.mesh.add(this.birdmesh);
 };
 var birds = [];
-for (let i = 0; i < 5; i++) {
+for (let i = 0; i < 30; i++) {
     var bird = new Bird();
-    bird.mesh.scale.set(.25, .25, .25);
-    bird.mesh.position.y = 25;
-    bird.mesh.position.x = 10 * i;
-    bird.mesh.rotation.y = 3.14 / 4;
+    bird.mesh.scale.set(.05, .05, .05);
+    bird.mesh.position.x = 3 * i;
+    bird.mesh.rotation.y = 3.14 / 2;
+    if (i > 10 && i <= 20) {
+        bird.mesh.position.y = 15;
+    }
+    else if (i > 20) {
+        bird.mesh.position.y = 10;
+    }
+    else {
+        bird.mesh.position.y = 20;
+    }
+
     birds.push(bird);
     scene.add(bird.mesh);
 }
 
-
-// var Bird = function () {
-
-//     const bodyvertex = [0, - 0, - 20,
-//         0, 4, - 20,
-//         0, 0, 30]
-
-//     const winglvertex = [
-//         0, 0, - 15,
-//         - 40, 0, 0,
-//         0, 0, 15
-//     ]
-//     const wingrvertex = [
-//         0, 0, 15,
-//         40, 0, 0,
-//         0, 0, - 15
-//     ]
-//     this.birdgeometry = new THREE.BufferGeometry();
-
-//     const vertices = new Float32Array([
-//         0, - 0, - 20,
-//         0, 8, - 20,
-//         0, 0, 30,
-
-//         0, 0, - 15,
-//         - 40, 0, 0,
-//         0, 0, 15,
-
-//         0, 0, 15,
-//         40, 0, 0,
-//         0, 0, - 15
-//     ])
-
-//     this.mesh = new THREE.Object3D();
-
-//     this.birdgeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-//     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
-//     this.birdmesh = new THREE.Mesh(this.birdgeometry, material);
-//     this.mesh.add(this.birdmesh);
-// };
-
-// var bird;
-// function createPlane() {
-//     bird = new Bird();
-//     bird.mesh.scale.set(.25, .25, .25);
-//     bird.mesh.position.y = 25;
-//     bird.mesh.rotation.y = 3.14/4;
-//     scene.add(bird.mesh);
-// }
-// createPlane();
 
 
 //winter init
@@ -411,6 +370,13 @@ function springShow() {
     springFlag = true;
     instancedMesh.visible = true;
 }
+
+function fallShow() {
+    fallFlag = true;
+    birds.forEach(it => {
+        it.mesh.visible = true;
+    })
+}
 function seasonDisable() {
     springFlag = false;
     summerFlag = false;
@@ -420,6 +386,9 @@ function seasonDisable() {
     pileGroupWinter.visible = false;
     rainGroupSummer.visible = false;
     instancedMesh.visible = false;
+    birds.forEach(it => {
+        it.mesh.visible = false;
+    })
 }
 
 
@@ -486,30 +455,37 @@ function render() {
         start = time;
         seasonListener.next();
     }
-    if (time - flipstart >= 0.3) {
-        flipstart = time;
-        if (flipflag) {
-            birds.forEach(bird => {
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, -15);
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, -15);
-                (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
-            })
-            flipflag = false;
-        }
-        else if (!flipflag) {
-            birds.forEach(bird => {
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, -15);
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
-                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, -15);
-                (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
-            })
+    if (fallFlag) {
+        if (time - flipstart >= 0.3) {
+            flipstart = time;
+            if (flipflag) {
+                birds.forEach(bird => {
+                    if (bird.mesh.position.x > maxRange / 2)
+                        bird.mesh.position.x = -maxRange / 2;
+                    bird.mesh.position.x += 1.5;
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, 15);
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, 15);
+                    (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
+                })
+                flipflag = false;
+            }
+            else if (!flipflag) {
+                birds.forEach(bird => {
+                    bird.mesh.position.x += 1.5;
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, -15);
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
+                    (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, -15);
+                    (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
+                })
 
-            flipflag = true;
+                flipflag = true;
+            }
         }
     }
+
     if (summerFlag) {
         rainGroupSummer.children.forEach(sprite => {
             // 雨滴的y坐标每次减1
@@ -555,10 +531,6 @@ function render() {
 requestAnimationFrame(render);
 
 
-function fallShow() {
-    fallFlag = true;
-    console.log('fall');
-}
 
 // var controls = new CONTROL.OrbitControls(camera, renderer.domElement);//创建控件对象
 // controls.addEventListener('change', render);//监听鼠标、键盘事件
