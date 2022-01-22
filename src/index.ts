@@ -107,6 +107,18 @@ ground.position.y = 0;
 const maxRange = 100;
 const minRange = maxRange / 2;
 
+//sound init
+var springMusic = "music/spring.mp3";
+var fallMusic = "music/fall.mp3";
+var summerMusic = "music/summer.mp3";
+var winterMusic = "music/winter.mp3";
+// var musicList=[springMusic,summerMusic,fallMusic,winterMusic];
+var audioLoader = new THREE.AudioLoader();
+var listener = new THREE.AudioListener();
+var audio = new THREE.Audio(listener);
+
+
+
 //spring init
 var springFlag = true;
 const vertexShader = `
@@ -351,7 +363,11 @@ function winterShow() {
     setLight(new Color(0x0000ff));
     pileGroupWinter.visible = true;
     pileGroupWinter.children.forEach(it => { it.visible = false; })
-
+    audioLoader.load(winterMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
 }
 
 function summerInit() {
@@ -392,7 +408,15 @@ function summerInit() {
 function summerShow() {
     summerFlag = true;
     rainGroupSummer.visible = true;
+<<<<<<< HEAD
     setLight(new Color(0xcc0000));
+=======
+    audioLoader.load(summerMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
+>>>>>>> da6a77a45016e2c24b5b07f76907018338c5b9b7
 }
 function springInit() {
     scene.add(instancedMesh);
@@ -423,6 +447,11 @@ function springShow() {
     springFlag = true;
    setLight(new Color(0x00ff00));
     instancedMesh.visible = true;
+    audioLoader.load(springMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
 }
 
 function fallShow() {
@@ -431,6 +460,11 @@ function fallShow() {
     birds.forEach(it => {
         it.mesh.visible = true;
     })
+    audioLoader.load(fallMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
 }
 function seasonDisable() {
     springFlag = false;
@@ -444,6 +478,7 @@ function seasonDisable() {
     birds.forEach(it => {
         it.mesh.visible = false;
     })
+    audio.pause();
 }
 
 
