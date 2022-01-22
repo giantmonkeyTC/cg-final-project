@@ -71,6 +71,11 @@ scene.add(ground);
 
 const maxRange = 100;
 const minRange = maxRange / 2;
+class FlipEvent extends EventDispatcher {
+    inform() {
+        this.dispatchEvent({ type: 'flip' });
+    }
+}
 
 var Bird = function () {
 
@@ -105,23 +110,22 @@ var Bird = function () {
     ])
 
     this.mesh = new THREE.Object3D();
-
+    this.event = new FlipEvent();
     this.birdgeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
     this.birdmesh = new THREE.Mesh(this.birdgeometry, material);
     this.mesh.add(this.birdmesh);
 };
 
-var bird;
-function createPlane() {
-    for(let i =0;i<10;i++){
-    }
-    bird = new Bird();
+var birds = [];
+for (let i = 0; i < 3; i++) {
+    var bird = new Bird();
     bird.mesh.scale.set(.25, .25, .25);
-    bird.mesh.position.y = 10;
+    bird.mesh.position.y = 25;
+    bird.mesh.position.x = 10 * i;
+    birds.push(bird);
     scene.add(bird.mesh);
 }
-createPlane();
 
 
 // disabling AA (antialiasing) to increase performance on macs with retina displays
@@ -145,26 +149,31 @@ function render() {
     const time = Date.now() * 0.001;
     if (time - start >= 0.3) {
         start = time;
+
         if (flag) {
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, 15);
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, 15);
-            console.log((bird.birdgeometry as BufferGeometry).getAttribute('position').getX(5));
-           (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
+            birds.forEach(bird => {
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, 15);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, 15);
+                (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
+            })
             flag = false;
         }
-        else if(!flag) {
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, -15);
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
-            (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, -15);
-            console.log((bird.birdgeometry as BufferGeometry).getAttribute('position').getX(5));
-            flag = true;
-            (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
-        }
+        else if (!flag) {
+            birds.forEach(bird => {
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, -15);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, -15);
+                (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
+            })
 
+            flag = true;
+        }
     }
+
+
     renderer.render(scene, camera); //执行渲染操作
     requestAnimationFrame(render);//请求再次执行渲染函数render，渲染下一帧
 
