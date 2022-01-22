@@ -482,6 +482,7 @@ seasonListener.addEventListener('season_next', function (event) {
 var start = 0;
 var flipflag = true;
 var flipstart = 0;
+seasonListener.inform(SeasonType.Spring);
 function render() {
     const time = Date.now() * 0.001;
     if (rotationSetting) {
