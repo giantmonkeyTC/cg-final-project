@@ -3,7 +3,7 @@ import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Object3D, Poin
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
 import { time, timeStamp } from "console";
-import { idText, isVoidExpression } from "typescript";
+import { idText, isVoidExpression, sortAndDeduplicateDiagnostics } from "typescript";
 
 /**
      * 创建场景对象Scene
@@ -69,6 +69,18 @@ scene.add(ground);
 
 const maxRange = 100;
 const minRange = maxRange / 2;
+
+//sound init
+var springMusic = "music/spring.mp3";
+var fallMusic = "music/fall.mp3";
+var summerMusic = "music/summer.mp3";
+var winterMusic = "music/winter.mp3";
+// var musicList=[springMusic,summerMusic,fallMusic,winterMusic];
+var audioLoader = new THREE.AudioLoader();
+var listener = new THREE.AudioListener();
+var audio = new THREE.Audio(listener);
+
+
 
 //spring init
 var springFlag = true;
@@ -304,7 +316,11 @@ function winterShow() {
     snowGroupWinter.visible = true;
     pileGroupWinter.visible = true;
     pileGroupWinter.children.forEach(it => { it.visible = false; })
-
+    audioLoader.load(winterMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
 }
 
 function summerInit() {
@@ -345,6 +361,11 @@ function summerInit() {
 function summerShow() {
     summerFlag = true;
     rainGroupSummer.visible = true;
+    audioLoader.load(summerMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
 }
 function springInit() {
     scene.add(instancedMesh);
@@ -369,6 +390,11 @@ function springInit() {
 function springShow() {
     springFlag = true;
     instancedMesh.visible = true;
+    audioLoader.load(springMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
 }
 
 function fallShow() {
@@ -376,6 +402,11 @@ function fallShow() {
     birds.forEach(it => {
         it.mesh.visible = true;
     })
+    audioLoader.load(fallMusic, function(buffer) {
+        audio.setBuffer(buffer);
+        audio.setLoop(true);
+        audio.play();
+    });
 }
 function seasonDisable() {
     springFlag = false;
@@ -389,6 +420,7 @@ function seasonDisable() {
     birds.forEach(it => {
         it.mesh.visible = false;
     })
+    audio.pause();
 }
 
 
