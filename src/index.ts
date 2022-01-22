@@ -38,13 +38,29 @@ loader.load('/scene.gltf', function (gltf) {
 }, undefined, function (error) {
     console.error(error);
 })
-scene.background = new THREE.Color(0x000000);
+const canvas = document.createElement('canvas');
+canvas.width = 1;
+canvas.height = 32;
+
+const context = canvas.getContext('2d');
+const gradient = context.createLinearGradient(0, 0, 0, 24);
+gradient.addColorStop(0.0, '#014a84');
+gradient.addColorStop(0.4, '#0561a0');
+gradient.addColorStop(0.8, '#ffffff');
+context.fillStyle = gradient;
+context.fillRect(0, 0, 1, 24);
+
+const background = new THREE.Mesh(
+    new THREE.SphereGeometry(150),
+    new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(canvas), side: THREE.BackSide })
+);
+scene.add(background);
 camera.position.z = -30;
 camera.position.x = 0;
 camera.position.y = 10;
 camera.rotation.y = 3.14;
 
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(150, 150), new THREE.MeshPhongMaterial({ color: 0x000000, depthWrite: false }));
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshPhongMaterial({ color: 0x000000, depthWrite: false }));
 ground.rotation.x = - Math.PI / 2;
 ground.position.y = 0;
 scene.add(ground);
@@ -347,7 +363,7 @@ const seasonListener = new SeasonEvent();
 var index = 0;
 pileListener.addEventListener('pile', function (event) {
     pileGroupWinter.children.at(index).visible = true;
-    pileGroupWinter.children.at(index).position.set(event.x, 1., event.z);
+    pileGroupWinter.children.at(index).position.set(event.x, 0., event.z);
     index++;
     if (index >= pileNumberWinter)
         index = 0;
