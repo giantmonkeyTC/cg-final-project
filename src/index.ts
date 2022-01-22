@@ -2,7 +2,6 @@ import * as THREE from "three"
 import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Object3D, Plane, Points } from "three"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
-import { time, timeStamp } from "console";
 import { idText, isVoidExpression } from "typescript";
 import { GUI } from 'dat.gui';
 
@@ -25,7 +24,7 @@ ambient.intensity = 5;
 scene.add(ambient);
 var directional = new THREE.DirectionalLight(0xffffff);
 directional.intensity = 3;
-directional.position.set(-100,0,0);
+directional.position.set(-100, 0, 0);
 scene.add(directional);
 /**
  * 相机设置
@@ -363,7 +362,7 @@ function winterShow() {
     setLight(new Color(0x0000ff));
     pileGroupWinter.visible = true;
     pileGroupWinter.children.forEach(it => { it.visible = false; })
-    audioLoader.load(winterMusic, function(buffer) {
+    audioLoader.load(winterMusic, function (buffer) {
         audio.setBuffer(buffer);
         audio.setLoop(true);
         audio.play();
@@ -409,7 +408,7 @@ function summerShow() {
     summerFlag = true;
     rainGroupSummer.visible = true;
     setLight(new Color(0xcc0000));
-    audioLoader.load(summerMusic, function(buffer) {
+    audioLoader.load(summerMusic, function (buffer) {
         audio.setBuffer(buffer);
         audio.setLoop(true);
         audio.play();
@@ -436,16 +435,16 @@ function springInit() {
 
     }
 }
-function setLight(color:Color){
-  
+function setLight(color: Color) {
+
     ambient.color = color;
-  
+
 }
 function springShow() {
     springFlag = true;
-   setLight(new Color(0x00ff00));
+    setLight(new Color(0x00ff00));
     instancedMesh.visible = true;
-    audioLoader.load(springMusic, function(buffer) {
+    audioLoader.load(springMusic, function (buffer) {
         audio.setBuffer(buffer);
         audio.setLoop(true);
         audio.play();
@@ -458,7 +457,7 @@ function fallShow() {
     birds.forEach(it => {
         it.mesh.visible = true;
     })
-    audioLoader.load(fallMusic, function(buffer) {
+    audioLoader.load(fallMusic, function (buffer) {
         audio.setBuffer(buffer);
         audio.setLoop(true);
         audio.play();
@@ -543,7 +542,7 @@ function render(timestamp) {
     console.log(time);
     plane.rotation.y += 0.005;
     plane.rotation.z += 0.005;
-    
+
     if (rotationSetting) {
         if (time - start >= 30) {
             start = time;
