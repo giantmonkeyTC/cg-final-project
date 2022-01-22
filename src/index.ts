@@ -408,15 +408,13 @@ function summerInit() {
 function summerShow() {
     summerFlag = true;
     rainGroupSummer.visible = true;
-<<<<<<< HEAD
     setLight(new Color(0xcc0000));
-=======
     audioLoader.load(summerMusic, function(buffer) {
         audio.setBuffer(buffer);
         audio.setLoop(true);
         audio.play();
     });
->>>>>>> da6a77a45016e2c24b5b07f76907018338c5b9b7
+
 }
 function springInit() {
     scene.add(instancedMesh);
