@@ -3,7 +3,8 @@ import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Object3D, Poin
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
 import { time, timeStamp } from "console";
-import { idText, isVoidExpression, sortAndDeduplicateDiagnostics } from "typescript";
+import { idText, isVoidExpression } from "typescript";
+import { GUI } from 'dat.gui';
 
 /**
      * 创建场景对象Scene
@@ -50,6 +51,38 @@ gradient.addColorStop(0.4, '#0561a0');
 gradient.addColorStop(0.8, '#ffffff');
 context.fillStyle = gradient;
 context.fillRect(0, 0, 1, 24);
+
+var rotationSetting = true;
+
+//gui
+var gui: GUI = new GUI();
+var controls = new function () {
+    this.spring = function () {
+        seasonListener.inform(SeasonType.Spring);
+        rotationSetting = false;
+    }
+    this.summer = function () {
+        seasonListener.inform(SeasonType.Summer);
+        rotationSetting = false;
+    }
+    this.fall = function () {
+        seasonListener.inform(SeasonType.Fall);
+        rotationSetting = false;
+    }
+    this.winter = function () {
+        seasonListener.inform(SeasonType.Winter);
+        rotationSetting = false;
+    }
+    this.startRotation = function(){
+        rotationSetting = true;
+    }
+};
+
+gui.add(controls, 'spring');
+gui.add(controls, 'summer');
+gui.add(controls, 'fall');
+gui.add(controls, 'winter');
+gui.add(controls,'startRotation');
 
 const background = new THREE.Mesh(
     new THREE.SphereGeometry(150),
@@ -481,12 +514,17 @@ seasonListener.addEventListener('season_next', function (event) {
 var start = 0;
 var flipflag = true;
 var flipstart = 0;
-function render() {
-    const time = Date.now() * 0.001;
-    if (time - start >= 5) {
-        start = time;
-        seasonListener.next();
+seasonListener.inform(SeasonType.Spring);
+function render(timestamp) {
+    const time =timestamp * 0.001;
+    console.log(time);
+    if (rotationSetting) {
+        if (time - start >= 30) {
+            start = time;
+            seasonListener.next();
+        }
     }
+
     if (fallFlag) {
         if (time - flipstart >= 0.3) {
             flipstart = time;
