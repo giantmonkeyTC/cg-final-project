@@ -1,8 +1,9 @@
 import * as THREE from "three"
-import { BufferAttribute, Color, EventDispatcher, Points } from "three"
+import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Points } from "three"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
 import { time, timeStamp } from "console";
+import { idText, isVoidExpression } from "typescript";
 
 /**
      * 创建场景对象Scene
@@ -145,6 +146,90 @@ var rainDropSpeed = 1.2;
 
 //falll init
 var fallFlag = false;
+var Bird = function () {
+    this.birdgeometry = new THREE.BufferGeometry();
+
+    const vertices = new Float32Array([
+        0, - 0, 0,
+        0, 8, 0,
+        0, 0, 30,
+
+        0, 0, - 15,
+        - 40, 0, 0,
+        0, 0, 15,
+
+        0, 0, 15,
+        40, 0, 0,
+        0, 0, - 15
+    ])
+
+    this.mesh = new THREE.Object3D();
+    this.birdgeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+    const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    this.birdmesh = new THREE.Mesh(this.birdgeometry, material);
+    this.mesh.add(this.birdmesh);
+};
+var birds = [];
+for (let i = 0; i < 5; i++) {
+    var bird = new Bird();
+    bird.mesh.scale.set(.25, .25, .25);
+    bird.mesh.position.y = 25;
+    bird.mesh.position.x = 10 * i;
+    bird.mesh.rotation.y = 3.14 / 4;
+    birds.push(bird);
+    scene.add(bird.mesh);
+}
+
+
+// var Bird = function () {
+
+//     const bodyvertex = [0, - 0, - 20,
+//         0, 4, - 20,
+//         0, 0, 30]
+
+//     const winglvertex = [
+//         0, 0, - 15,
+//         - 40, 0, 0,
+//         0, 0, 15
+//     ]
+//     const wingrvertex = [
+//         0, 0, 15,
+//         40, 0, 0,
+//         0, 0, - 15
+//     ]
+//     this.birdgeometry = new THREE.BufferGeometry();
+
+//     const vertices = new Float32Array([
+//         0, - 0, - 20,
+//         0, 8, - 20,
+//         0, 0, 30,
+
+//         0, 0, - 15,
+//         - 40, 0, 0,
+//         0, 0, 15,
+
+//         0, 0, 15,
+//         40, 0, 0,
+//         0, 0, - 15
+//     ])
+
+//     this.mesh = new THREE.Object3D();
+
+//     this.birdgeometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+//     const material = new THREE.MeshBasicMaterial({ color: 0xffffff });
+//     this.birdmesh = new THREE.Mesh(this.birdgeometry, material);
+//     this.mesh.add(this.birdmesh);
+// };
+
+// var bird;
+// function createPlane() {
+//     bird = new Bird();
+//     bird.mesh.scale.set(.25, .25, .25);
+//     bird.mesh.position.y = 25;
+//     bird.mesh.rotation.y = 3.14/4;
+//     scene.add(bird.mesh);
+// }
+// createPlane();
 
 
 //winter init
@@ -393,11 +478,37 @@ seasonListener.addEventListener('season_next', function (event) {
 
 });
 var start = 0;
+var flipflag = true;
+var flipstart = 0;
 function render() {
     const time = Date.now() * 0.001;
     if (time - start >= 5) {
         start = time;
         seasonListener.next();
+    }
+    if (time - flipstart >= 0.3) {
+        flipstart = time;
+        if (flipflag) {
+            birds.forEach(bird => {
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, -15);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, -15);
+                (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
+            })
+            flipflag = false;
+        }
+        else if (!flipflag) {
+            birds.forEach(bird => {
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(4, -35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(4, -15);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setX(7, 35);
+                (bird.birdgeometry as BufferGeometry).getAttribute('position').setY(7, -15);
+                (bird.birdgeometry as BufferGeometry).attributes.position.needsUpdate = true;
+            })
+
+            flipflag = true;
+        }
     }
     if (summerFlag) {
         rainGroupSummer.children.forEach(sprite => {
