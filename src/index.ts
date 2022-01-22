@@ -1,5 +1,5 @@
 import * as THREE from "three"
-import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Object3D, Points } from "three"
+import { BufferAttribute, BufferGeometry, Color, EventDispatcher, Object3D, Plane, Points } from "three"
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js"
 import * as CONTROL from "three/examples/jsm/controls/OrbitControls.js"
 import { time, timeStamp } from "console";
@@ -18,11 +18,15 @@ var sky = 30;
 var groundSize = 30
 point.position.set(60, 0, 10); //点光源位置
 point.power = 10.
-point.intensity = 10.
+point.intensity = 3.
 scene.add(point); //点光源添加到场景中
 var ambient = new THREE.AmbientLight(0xffffff);
-ambient.intensity = 10.
+ambient.intensity = 5;
 scene.add(ambient);
+var directional = new THREE.DirectionalLight(0xffffff);
+directional.intensity = 3;
+directional.position.set(-100,0,0);
+scene.add(directional);
 /**
  * 相机设置
  */
@@ -73,7 +77,7 @@ var controls = new function () {
         seasonListener.inform(SeasonType.Winter);
         rotationSetting = false;
     }
-    this.startRotation = function(){
+    this.startRotation = function () {
         rotationSetting = true;
     }
 };
@@ -82,7 +86,7 @@ gui.add(controls, 'spring');
 gui.add(controls, 'summer');
 gui.add(controls, 'fall');
 gui.add(controls, 'winter');
-gui.add(controls,'startRotation');
+gui.add(controls, 'startRotation');
 
 const background = new THREE.Mesh(
     new THREE.SphereGeometry(150),
@@ -97,7 +101,7 @@ camera.rotation.y = 3.14;
 const ground = new THREE.Mesh(new THREE.PlaneGeometry(250, 250), new THREE.MeshPhongMaterial({ color: 0x000000, depthWrite: false }));
 ground.rotation.x = - Math.PI / 2;
 ground.position.y = 0;
-scene.add(ground);
+// scene.add(ground);
 
 
 const maxRange = 100;
@@ -232,6 +236,15 @@ const pileNumberWinter = 10000;
 const velocitiesWinter = [];
 var winterFlag = false;
 
+
+//cover init
+const cover = new THREE.IcosahedronGeometry(60);
+const coverMaterial = new THREE.MeshPhongMaterial({ color: new Color(0xffff66), side: THREE.DoubleSide });
+const plane = new THREE.Mesh(cover, coverMaterial);
+plane.position.z = 100;
+ground.rotation.y = - Math.PI / 2;
+scene.add(plane);
+
 winterInit();
 summerInit();
 springInit();
@@ -335,6 +348,7 @@ function winterInit() {
 function winterShow() {
     winterFlag = true;
     snowGroupWinter.visible = true;
+    setLight(new Color(0x0000ff));
     pileGroupWinter.visible = true;
     pileGroupWinter.children.forEach(it => { it.visible = false; })
 
@@ -378,6 +392,7 @@ function summerInit() {
 function summerShow() {
     summerFlag = true;
     rainGroupSummer.visible = true;
+    setLight(new Color(0xcc0000));
 }
 function springInit() {
     scene.add(instancedMesh);
@@ -399,13 +414,20 @@ function springInit() {
 
     }
 }
+function setLight(color:Color){
+  
+    ambient.color = color;
+  
+}
 function springShow() {
     springFlag = true;
+   setLight(new Color(0x00ff00));
     instancedMesh.visible = true;
 }
 
 function fallShow() {
     fallFlag = true;
+    setLight(new Color(0xcccc00));
     birds.forEach(it => {
         it.mesh.visible = true;
     })
@@ -484,15 +506,17 @@ var flipflag = true;
 var flipstart = 0;
 seasonListener.inform(SeasonType.Spring);
 function render(timestamp) {
-    const time =timestamp * 0.001;
+    const time = timestamp * 0.001;
     console.log(time);
+    plane.rotation.y += 0.005;
+    plane.rotation.z += 0.005;
+    
     if (rotationSetting) {
         if (time - start >= 30) {
             start = time;
             seasonListener.next();
         }
     }
-
     if (fallFlag) {
         if (time - flipstart >= 0.3) {
             flipstart = time;
