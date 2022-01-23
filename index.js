@@ -1,7 +1,8 @@
-import * as THREE from "/node_modules/three/src/Three"
-import { Color, EventDispatcher } from "/node_modules/three/src/Three";
-import { GLTFLoader } from "/node_modules/three/examples/jsm/loaders/GLTFLoader";
-import { GUI } from '/node_modules/dat.gui/src/dat/index';
+import * as THREE from "./node_modules/three/src/Three.js"
+import { Color, EventDispatcher } from "./node_modules/three/src/Three.js";
+import { GLTFLoader } from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js";
+import { GUI } from './node_modules/dat.gui/src/dat/index.js';
+import './node_modules/dat.gui/src/dat'
 /**
      * 创建场景对象Scene
      */
