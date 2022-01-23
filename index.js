@@ -1,8 +1,7 @@
 import * as THREE from "./node_modules/three/src/Three.js"
 import { Color, EventDispatcher } from "./node_modules/three/src/Three.js";
 import { GLTFLoader } from "./node_modules/three/examples/jsm/loaders/GLTFLoader.js";
-import { GUI } from './node_modules/dat.gui/src/dat/index.js';
-import './node_modules/dat.gui/src/dat'
+import * as DATGUI from './node_modules/dat.gui/src/dat/index.js';
 /**
      * 创建场景对象Scene
      */
@@ -53,7 +52,7 @@ context.fillStyle = gradient;
 context.fillRect(0, 0, 1, 24);
 var rotationSetting = true;
 //gui
-var gui = new GUI();
+var gui = new DATGUI.GUI();
 var controls = new function () {
     this.spring = function () {
         seasonListener.inform(SeasonType.Spring);
